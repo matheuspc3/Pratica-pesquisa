@@ -161,22 +161,17 @@ tabela_resultados <- resultados %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
 
 #5)
-categorias_dataframe = bind_cols(select(wine_data,1), categorias_dataframe)
-attributes(categorias_dataframe$Alcohol)
-Wine.data_trans <- as(categorias_dataframe, "transactions")
+wine_data_trans <- as(wine_data, "transactions")
 
-rules <- apriori(Wine.data_trans, parameter = list(supp = 0.3, conf = 0.9, target = "rules")) 
-
+rules <- apriori(wine_data_trans, parameter = list(supp = 0.3, conf = 0.8, target = "rules"))
 inspect(rules)
-
 rules_a <- as(rules, "data.frame")
 
-plot(rules, engine = "ggplot2", main = NULL) + 
+plot(rules, engine = "ggplot2", main = NULL) +
   scale_color_gradient2(mid = "blue", high = "red", 
-                        midpoint = median(rules_a$lift), limits = c(min(rules_a$lift),max(rules_a$lift))) +
-  labs(x = "Supp", y = "Conf", color = "Lift") + 
+                        midpoint = median(rules_a$lift), limits = c(min(rules_a$lift), max(rules_a$lift))) +
+  labs(x = "Supp.", y="Conf.", color = "Lift") +
   theme_classic()
-
 
 
 
