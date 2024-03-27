@@ -110,6 +110,73 @@ dw_categ_mapping = cbind(transform(cm, discretizacao), discretizacao[-1])
 
 print(dw_categ_mapping)
 
+install.packages("kmeans")
+library(kmeans)
+
+
+modelo <- cluster_kmeans(k = 3)
+data_for_model <- select(wine_data, -Type)
+modelo <- fit(modelo, data_for_model)
+clu <- cluster(modelo, data_for_model)
+
+calculate_entropy <- function(data) {
+  freqs <- table(data) / length(data)
+  -sum(freqs * log(freqs + 1e-6))
+}
+
+entropy_clusters <- sapply(unique(clu), function(cluster_id) {
+  data_in_cluster <- wine_data$Type[clu == cluster_id]
+  calculate_entropy(data_in_cluster)
+})
+
+entropy_type <- calculate_entropy(wine_data$Type)
+print("Entropia para cada grupo gerado pelo K-means:")
+print(entropy_clusters)
+
+print("Entropia para a classe 'Type' original:")
+print(entropy_type)
+
+#4)
+
+wine_data$Type <- as.factor(wine_data$Type)
+wine_data <- as.data.frame(wine_data)
+
+slevels <- levels(wine_data$Type)
+model <- cla_mlp("Type", slevels, size=3, decay=0.03)
+
+sr <- sample_random()
+sr <- train_test(sr, wine_data)
+train <- sr$train
+test <- sr$test
+
+model <- fit(model, train)
+
+prediction <- predict(model, test)
+predictand <- adjust_class_label(test[,"Type"])
+test_eval <- evaluate(model, predictand, prediction)
+test_eval$metrics %>% View()
+
+tabela_resultados <- resultados %>%
+  kable("html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+#5)
+categorias_dataframe = bind_cols(select(wine_data,1), categorias_dataframe)
+attributes(categorias_dataframe$Alcohol)
+Wine.data_trans <- as(categorias_dataframe, "transactions")
+
+rules <- apriori(Wine.data_trans, parameter = list(supp = 0.3, conf = 0.9, target = "rules")) 
+
+inspect(rules)
+
+rules_a <- as(rules, "data.frame")
+
+plot(rules, engine = "ggplot2", main = NULL) + 
+  scale_color_gradient2(mid = "blue", high = "red", 
+                        midpoint = median(rules_a$lift), limits = c(min(rules_a$lift),max(rules_a$lift))) +
+  labs(x = "Supp", y = "Conf", color = "Lift") + 
+  theme_classic()
+
 
 
 
